@@ -2,314 +2,175 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>トマト農園 赤実屋 | 新鮮なトマトをお届け</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ScanSnap - ドキュメントスキャナー</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <!-- ヘッダー -->
   <header class="header">
-    <div class="container">
+    <div class="header-inner">
       <div class="logo">
-        <span class="logo-icon">🍅</span>
-        <div class="logo-text">
-          <h1>赤実屋</h1>
-          <p>トマト農園</p>
-        </div>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/>
+          <path d="M7 8h10M7 12h10M7 16h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>ScanSnap</span>
       </div>
-      <nav class="nav">
-        <ul>
-          <li><a href="#about">農園について</a></li>
-          <li><a href="#products">商品</a></li>
-          <li><a href="#features">こだわり</a></li>
-          <li><a href="#contact">お問い合わせ</a></li>
-        </ul>
-      </nav>
+      <button class="btn-pdf" id="exportBtn" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+          <polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2"/>
+          <line x1="12" y1="18" x2="12" y2="12" stroke="currentColor" stroke-width="2"/>
+          <polyline points="9,15 12,18 15,15" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        PDF出力 (<span id="pageCount">0</span>)
+      </button>
     </div>
   </header>
 
-  <!-- ヒーローセクション -->
-  <section class="hero">
-    <div class="hero-content">
-      <p class="hero-subtitle">毎朝収穫・直送</p>
-      <h2 class="hero-title">太陽の恵みを<br>まるごとお届け</h2>
-      <p class="hero-desc">赤実屋は、自然豊かな農園でひとつひとつ丁寧に育てた<br>新鮮なトマトをお届けする専門農園です。</p>
-      <a href="#products" class="btn btn-primary">商品を見る</a>
+  <!-- メイン -->
+  <main class="main">
+
+    <!-- カメラビュー -->
+    <div class="camera-section" id="cameraSection">
+      <div class="viewfinder">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="overlay" class="overlay"></canvas>
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+        <div class="scan-line"></div>
+      </div>
+      <div class="camera-controls">
+        <button class="btn-icon" id="galleryPickBtn" title="ギャラリーから選択">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+            <polyline points="21,15 16,10 5,21" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none">
+        </button>
+        <button class="btn-capture" id="captureBtn">
+          <div class="capture-ring"></div>
+        </button>
+        <button class="btn-icon" id="switchCamera" title="カメラ切替">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M20 7h-9m0 0a3 3 0 0 0-3-3H5a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-9a3 3 0 0 0-3-3z" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="camera-tip">書類を枠内に合わせて撮影してください</div>
     </div>
-    <div class="hero-image">
-      <div class="tomato-illustration">
-        <div class="tomato t1"></div>
-        <div class="tomato t2"></div>
-        <div class="tomato t3"></div>
-        <div class="leaf l1"></div>
-        <div class="leaf l2"></div>
+
+    <!-- 画像編集ビュー -->
+    <div class="edit-section hidden" id="editSection">
+      <div class="edit-header">
+        <button class="btn-text" id="cancelEdit">キャンセル</button>
+        <span>画像を調整</span>
+        <button class="btn-text accent" id="confirmEdit">追加</button>
       </div>
-    </div>
-  </section>
-
-  <!-- 農園について -->
-  <section id="about" class="about">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">About</span>
-        <h2>農園について</h2>
+      <div class="edit-canvas-wrap">
+        <canvas id="editCanvas"></canvas>
       </div>
-      <div class="about-grid">
-        <div class="about-text">
-          <p>赤実屋は、1985年に長野県の豊かな大地で創業した老舗トマト農園です。三代にわたり、化学肥料を一切使わない有機農法にこだわり、土の力を最大限に活かしたトマト作りを続けています。</p>
-          <p>標高800mの冷涼な気候と昼夜の大きな寒暖差が、糖度の高い甘くて濃厚なトマトを育てます。年間を通じて、旬のトマトをみなさまの食卓へお届けします。</p>
-          <div class="stats">
-            <div class="stat">
-              <span class="stat-number">40<small>年</small></span>
-              <span class="stat-label">創業</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">15<small>種</small></span>
-              <span class="stat-label">品種</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number">3000<small>坪</small></span>
-              <span class="stat-label">農園面積</span>
-            </div>
+      <div class="edit-tools">
+        <div class="tool-group">
+          <label>明るさ</label>
+          <div class="slider-row">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input type="range" id="brightness" min="-100" max="100" value="0" class="slider">
+            <span id="brightnessVal">0</span>
           </div>
         </div>
-        <div class="about-image-box">
-          <div class="farm-visual">
-            <div class="farm-bg">
-              <div class="sun"></div>
-              <div class="plant p1">
-                <div class="stem"></div>
-                <div class="tomato-small ts1"></div>
-                <div class="tomato-small ts2"></div>
-                <div class="tomato-small ts3"></div>
-              </div>
-              <div class="plant p2">
-                <div class="stem"></div>
-                <div class="tomato-small ts1"></div>
-                <div class="tomato-small ts2"></div>
-              </div>
-              <div class="ground"></div>
-            </div>
+        <div class="tool-group">
+          <label>コントラスト</label>
+          <div class="slider-row">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 2v20M12 2a10 10 0 0 1 0 20" fill="currentColor"/></svg>
+            <input type="range" id="contrast" min="-100" max="100" value="0" class="slider">
+            <span id="contrastVal">0</span>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 商品セクション -->
-  <section id="products" class="products">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Products</span>
-        <h2>商品ラインナップ</h2>
-      </div>
-      <div class="products-grid">
-        <div class="product-card">
-          <div class="product-image red">
-            <div class="product-tomato big-tomato"></div>
-          </div>
-          <div class="product-info">
-            <span class="product-tag">定番人気</span>
-            <h3>大玉トマト</h3>
-            <p>肉厚でジューシー。サラダから料理まで万能に使える定番品種。糖度8度以上保証。</p>
-            <div class="product-price">
-              <span class="price">¥680</span>
-              <span class="unit">/ 1kg</span>
-            </div>
-            <a href="#contact" class="btn btn-outline">注文する</a>
-          </div>
-        </div>
-
-        <div class="product-card featured">
-          <div class="product-image cherry">
-            <div class="product-tomato cherry-tomato"></div>
-            <span class="badge">人気No.1</span>
-          </div>
-          <div class="product-info">
-            <span class="product-tag">おすすめ</span>
-            <h3>ミニトマト詰め合わせ</h3>
-            <p>赤・オレンジ・黄色の3色ミニトマト。甘みが強く子どもにも大人気。おやつにもぴったり。</p>
-            <div class="product-price">
-              <span class="price">¥850</span>
-              <span class="unit">/ 500g</span>
-            </div>
-            <a href="#contact" class="btn btn-primary">注文する</a>
-          </div>
-        </div>
-
-        <div class="product-card">
-          <div class="product-image yellow">
-            <div class="product-tomato yellow-tomato"></div>
-          </div>
-          <div class="product-info">
-            <span class="product-tag">希少品種</span>
-            <h3>イエロートマト</h3>
-            <p>酸味が少なくまろやかな甘さ。リコピンも豊富で美容・健康にもうれしい希少品種。</p>
-            <div class="product-price">
-              <span class="price">¥780</span>
-              <span class="unit">/ 800g</span>
-            </div>
-            <a href="#contact" class="btn btn-outline">注文する</a>
-          </div>
-        </div>
-
-        <div class="product-card">
-          <div class="product-image dark">
-            <div class="product-tomato dark-tomato"></div>
-          </div>
-          <div class="product-info">
-            <span class="product-tag">プレミアム</span>
-            <h3>フルーツトマト</h3>
-            <p>水を制限して育てた超高糖度トマト。糖度12度以上。まるでフルーツのような甘さ。</p>
-            <div class="product-price">
-              <span class="price">¥1,200</span>
-              <span class="unit">/ 500g</span>
-            </div>
-            <a href="#contact" class="btn btn-outline">注文する</a>
+        <div class="tool-group">
+          <label>フィルター</label>
+          <div class="filter-row">
+            <button class="filter-btn active" data-filter="none">
+              <div class="filter-preview original"></div>
+              <span>オリジナル</span>
+            </button>
+            <button class="filter-btn" data-filter="mono">
+              <div class="filter-preview mono"></div>
+              <span>モノクロ</span>
+            </button>
+            <button class="filter-btn" data-filter="doc">
+              <div class="filter-preview doc"></div>
+              <span>書類</span>
+            </button>
+            <button class="filter-btn" data-filter="vivid">
+              <div class="filter-preview vivid"></div>
+              <span>鮮明</span>
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- こだわりセクション -->
-  <section id="features" class="features">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Features</span>
-        <h2>赤実屋のこだわり</h2>
+    <!-- スキャン済みページ一覧 -->
+    <div class="pages-section" id="pagesSection">
+      <div class="pages-header">
+        <span class="pages-title" id="pagesTitle">スキャン済みページ</span>
+        <button class="btn-text-sm" id="clearAllBtn" style="display:none">すべて削除</button>
       </div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🌱</div>
-          <h3>有機農法</h3>
-          <p>化学肥料・農薬を一切使用しない完全有機農法。土づくりから丁寧に手をかけています。</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">☀️</div>
-          <h3>朝採り直送</h3>
-          <p>毎朝収穫したトマトを当日中に発送。農園から食卓までの鮮度を最優先しています。</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">💧</div>
-          <h3>天然水で栽培</h3>
-          <p>南アルプスの天然水を使用した栽培。ミネラル豊富な水がトマトの旨みを引き出します。</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🤝</div>
-          <h3>産地直送</h3>
-          <p>農園から直接お届けするため中間コストがなく、新鮮で高品質なトマトをお得な価格で。</p>
+      <div class="pages-grid" id="pagesGrid">
+        <div class="empty-state" id="emptyState">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" opacity="0.3">
+            <rect x="4" y="2" width="12" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 7h4M8 10h4M8 13h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="17" cy="17" r="5" fill="white" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M17 14v3l2 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <p>カメラボタンを押して<br>書類をスキャンしましょう</p>
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- お客様の声 -->
-  <section class="testimonials">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Reviews</span>
-        <h2>お客様の声</h2>
+  </main>
+
+  <!-- ページプレビューモーダル -->
+  <div class="modal hidden" id="previewModal">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="previewTitle">ページ 1</span>
+        <button class="btn-icon-sm" id="closeModal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
       </div>
-      <div class="testimonials-grid">
-        <div class="testimonial-card">
-          <div class="stars">★★★★★</div>
-          <p>「スーパーのトマトとは全然違う！甘さと旨みが凝縮されていて、もうここ以外のトマトが食べられなくなりました。」</p>
-          <span class="reviewer">東京都 / 田中様</span>
-        </div>
-        <div class="testimonial-card">
-          <div class="stars">★★★★★</div>
-          <p>「子どもがトマト嫌いだったのに、赤実屋さんのミニトマトは大好きになりました。甘くておやつ代わりに食べています！」</p>
-          <span class="reviewer">神奈川県 / 佐藤様</span>
-        </div>
-        <div class="testimonial-card">
-          <div class="stars">★★★★★</div>
-          <p>「毎月定期購入しています。新鮮で安心・安全な有機トマト。家族の健康のためにこれからも続けます。」</p>
-          <span class="reviewer">大阪府 / 山田様</span>
-        </div>
+      <img id="previewImg" src="" alt="">
+      <div class="modal-actions">
+        <button class="btn-danger" id="deletePageBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polyline points="3,6 5,6 21,6" stroke="currentColor" stroke-width="2"/><path d="M19 6l-1 14H6L5 6" stroke="currentColor" stroke-width="2"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2"/></svg>
+          削除
+        </button>
+        <button class="btn-primary" id="downloadPageBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2"/><polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2"/></svg>
+          保存
+        </button>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- お問い合わせ -->
-  <section id="contact" class="contact">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag">Contact</span>
-        <h2>ご注文・お問い合わせ</h2>
-      </div>
-      <div class="contact-grid">
-        <div class="contact-info">
-          <h3>赤実屋 トマト農園</h3>
-          <ul class="contact-list">
-            <li>
-              <span class="contact-icon">📍</span>
-              <span>〒399-8101<br>長野県安曇野市穂高牧123-4</span>
-            </li>
-            <li>
-              <span class="contact-icon">📞</span>
-              <span>0263-XX-XXXX<br>（受付時間 9:00〜17:00 土日除く）</span>
-            </li>
-            <li>
-              <span class="contact-icon">✉️</span>
-              <span>info@akamiya-tomato.jp</span>
-            </li>
-          </ul>
-        </div>
-        <form class="contact-form">
-          <div class="form-group">
-            <label for="name">お名前</label>
-            <input type="text" id="name" placeholder="山田 太郎">
-          </div>
-          <div class="form-group">
-            <label for="email">メールアドレス</label>
-            <input type="email" id="email" placeholder="example@email.com">
-          </div>
-          <div class="form-group">
-            <label for="product">ご希望の商品</label>
-            <select id="product">
-              <option value="">選択してください</option>
-              <option>大玉トマト</option>
-              <option>ミニトマト詰め合わせ</option>
-              <option>イエロートマト</option>
-              <option>フルーツトマト</option>
-              <option>その他・複数</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="message">ご質問・ご要望</label>
-            <textarea id="message" rows="4" placeholder="数量・配送希望日などをご記入ください"></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary btn-full">送信する</button>
-        </form>
-      </div>
+  <!-- PDF生成中オーバーレイ -->
+  <div class="loading-overlay hidden" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <p>PDF生成中...</p>
     </div>
-  </section>
+  </div>
 
-  <!-- フッター -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-top">
-        <div class="footer-logo">
-          <span class="logo-icon">🍅</span>
-          <div>
-            <p class="footer-shop-name">赤実屋 トマト農園</p>
-            <p class="footer-tagline">土から食卓へ、愛情込めて</p>
-          </div>
-        </div>
-        <nav class="footer-nav">
-          <a href="#about">農園について</a>
-          <a href="#products">商品</a>
-          <a href="#features">こだわり</a>
-          <a href="#contact">お問い合わせ</a>
-        </nav>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2025 赤実屋 トマト農園. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
